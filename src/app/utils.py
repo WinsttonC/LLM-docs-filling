@@ -1,4 +1,11 @@
 import re
+import os
+
+from dotenv import load_dotenv
+load_dotenv()
+
+doc_path = os.getenv("DOCUMENTS_PATH")
+
 def is_valid_string(input_string):
     pattern = r'^[_. ]+$'
     return not bool(re.match(pattern, input_string))
@@ -27,16 +34,32 @@ def find_blank_spots(text):
         
     return results
 
-def replace_substrings(input_string, schema):
+def replace_substrings(input_string, fields_dict):
     # Паттерн для поиска подстрок вида [[...]]
     pattern = r'\[\[(.*?)\]\]'
     
     # Функция замены подстрок
     def replace_value(match):
         key = match.group(1)  # Содержимое внутри [[...]]
-        return schema[key].get('user_answer', f'[[{key}]]') #replacement_dict[key]  # Возвращаем значение из словаря или оставляем как есть
-    
+        # return fields_dict[key].get('user_answer', f'[[{key}]]') #replacement_dict[key]  # Возвращаем значение из словаря или оставляем как есть
+        return fields_dict.get(key, f'[[{key}]]') #TODO: check (app-> fill rules)
     # Заменяем подстроки с помощью регулярных выражений и функции замены
     result_string = re.sub(pattern, replace_value, input_string)
     
     return result_string
+
+
+
+def check_doc_existance(doc_name):
+    file_path = f'{doc_path}/documents/{doc_name}.docx'
+    if os.path.exists(file_path):
+        return True
+    else:
+        return False
+def check_schema_existance(doc_name):
+    file_path = f'{doc_path}/doc_schemas/{doc_name}.json'
+    # file_path = f'doc_schemas/{doc_name}'
+    if os.path.exists(file_path):
+        return True
+    else:
+        return False
