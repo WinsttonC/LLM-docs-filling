@@ -6,53 +6,55 @@ from utils import shorten_blanks
 from docx import Document
 from dotenv import load_dotenv
 import os 
+import re
 import warnings
-
 load_dotenv()
 warnings.filterwarnings("ignore")
+
+doc_path = os.getenv("DOCUMENTS_PATH")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET_B64")
-BATCH_SIZE = 4
-
+BATCH_SIZE = 2
 chat = GigaChat(credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False) #model='GigaChat-Pro'
-doc = Document('dogovor_arenda.docx')
 
-final_text = []
-paragraphs = [shorten_blanks(p.text) for p in doc.paragraphs]
+def process_doc(doc_name, new_doc=False):
+    if new_doc:
+        file_path = f'{doc_path}/raw_docs/{doc_name}.docx'
+    else:
+        file_path = f'{doc_path}/documents/{doc_name}.docx'
 
-length = len(paragraphs)
-print('======== НАЧАЛО ОБРАБОТКИ ДОКУМЕНТА ========')
-print(f'Нужно обработать {length} строк')
-for i in range(0, length, BATCH_SIZE):
-    batch = paragraphs[i:min(i + BATCH_SIZE, length)]
-    input_text = '\n'.join(batch)
-    input_text = f'Строка с пропуском: {input_text}\nОтвет:'
-    messages = [SystemMessage(content=extraction_prompt)]
-    messages.append(HumanMessage(content=input_text))
-    res = chat(messages)
-    final_text.append(res.content)
-    # messages.append(res) # Сохранение истории запросов
-    print(f"\rОбработано {i} из {length}")
+    doc = Document(file_path)
 
+    final_text = []
+    paragraphs = [shorten_blanks(p.text) for p in doc.paragraphs]
+    pattern = r'_{2,}'
+    
+    length = len(paragraphs)
+    for i in range(0, length, BATCH_SIZE):
+        batch = paragraphs[i:min(i + BATCH_SIZE, length)]
+        input_text = '\n'.join(batch)
+        match = re.search(pattern, input_text)
+        if match:
+            input_text = f'Строка:\n {input_text}\nОтвет:'
+            messages = [SystemMessage(content=extraction_prompt)]
+            messages.append(HumanMessage(content=input_text))
+            res = chat(messages)
+            final_text.append(res.content)
+            print('В цикле с LLM:')
+            print('Строка: \n', input_text)
+            print('Результат: \n', res.content)
+            print('========================================\n')
+        else:
+            print('В цикле REGEX:')
+            # print('Строка: \n', input_text)
+            print('Результат: \n', input_text)
+            print('========================================\n')
+            final_text.append(input_text)
 
+    save_path = f'{doc_path}/documents/{doc_name}.docx'
+    new_doc = Document()
 
-# for i in range(len(final_text)):
-#     batch = final_text[i]
-#     if '_' in batch:   
-#         messages = [SystemMessage(content=extraction_prompt)]
-#         messages.append(HumanMessage(content=batch))
-#         res = chat(messages)
-#         final_text[i] = res.content
-#         # messages.append(res) # Сохранение истории запросов
-#         print(f'Запрос \n{batch}')
-#         print(f'Ответ\n\n{res.content}')
+    for text_block in final_text:
+        new_doc.add_paragraph(text_block)
 
-new_doc = Document()
-
-# Добавляем абзац с текстом в документ\
-for text_block in final_text:
-    new_doc.add_paragraph(text_block)
-
-# Сохраняем документ
-new_doc.save('processed_arenda.docx')
-
-print("ПОИСК СУЩНОСТЕЙ В ДОКУМЕНТЕ УСПЕШНО ЗАВЕРШЕН.")
+    new_doc.save(save_path)
+    

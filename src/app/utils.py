@@ -1,6 +1,6 @@
 import re
 import os
-
+import hashlib
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -16,7 +16,7 @@ def shorten_blanks(input_string):
     if is_valid_string(input_string):
         pattern = r'(_{2,})'
         # Заменяем длинные пропуски на сокращенный вариант
-        output_string = re.sub(pattern, '___', input_string)
+        output_string = re.sub(pattern, '____________', input_string)
         
         return output_string
     else:
@@ -48,7 +48,12 @@ def replace_substrings(input_string, fields_dict):
     
     return result_string
 
-
+def hash_filename(filename):
+    hash_object = hashlib.sha256()
+    hash_object.update(filename.encode('utf-8'))
+    hash_hex = hash_object.hexdigest()
+    
+    return hash_hex
 
 def check_doc_existance(doc_name):
     file_path = f'{doc_path}/documents/{doc_name}.docx'

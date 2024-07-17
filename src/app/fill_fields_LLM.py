@@ -11,7 +11,7 @@ load_dotenv()
 
 warnings.filterwarnings("ignore")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET_B64")
-BATCH_SIZE = 4
+BATCH_SIZE = 1
 
 chat = GigaChat(credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False) #model='GigaChat-Pro'
 doc_path = os.getenv("DOCUMENTS_PATH")
@@ -24,8 +24,8 @@ def fill_fields_LLM(doc_name: str, fields_dict: dict):
 
     document = Document(path_to_docx)
     paragraphs = [p.text for p in document.paragraphs]
-
-    filled_text = []
+    final_document = Document()
+    # filled_text = []
     length = len(paragraphs)
     for i in range(0, length, BATCH_SIZE):
         batch = '\n'.join(paragraphs[i:min(i + BATCH_SIZE, length)])
@@ -45,12 +45,15 @@ def fill_fields_LLM(doc_name: str, fields_dict: dict):
             messages = [SystemMessage(content=filling_prompt)]
             messages.append(HumanMessage(content=input_text))
             res = chat(messages)
-            filled_text.append(res.content)
-        else:
-            filled_text.append(batch)
-        final_document = Document()
 
-        for text_block in filled_text:
-            final_document.add_paragraph(text_block)
+            final_document.add_paragraph(res.content)
+            # filled_text.append(res.content)
+        else:
+            final_document.add_paragraph(batch)
+            # filled_text.append(batch)
+        
+
+        # for text_block in filled_text:
+        #     final_document.add_paragraph(text_block)
 
         final_document.save(f'{doc_path}/user_docs/{doc_name}.docx')

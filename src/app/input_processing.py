@@ -2,6 +2,7 @@ from chat import chat
 from langchain.schema import HumanMessage, SystemMessage
 from chroma import Chroma
 import os
+from utils import hash_filename
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 load_dotenv()
@@ -110,7 +111,19 @@ def find_documents(question):
     docs = [
         doc
         for doc, distance in zip(docs["documents"][0], docs["distances"][0])
-        if distance != 0 # TODO
+        if distance < 0.8 # TODO
         ]
     
     return docs
+
+def add_documents_to_vectorstore(doc_name):
+    client = Chroma("user_docs", embedding_model, collection_name)
+
+    document_titles = [doc_name]
+
+    data_dict = {
+        "docs": document_titles,
+        "ids": [hash_filename(f) for f in document_titles]
+    }
+
+    client.add_docs(data_dict)

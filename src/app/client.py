@@ -5,14 +5,15 @@ import aiohttp
 import pandas as pd
 import requests
 import streamlit as st
-from config import description
+
 from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
 import json
-from utils import check_schema_existance
+from utils import check_schema_existance, check_doc_existance
 from schema import create_schema
 from fill_fields_rules import fill_fields_rules
 from fill_fields_LLM import fill_fields_LLM
+from find_entities import process_doc
 from chat import chat
 from input_processing import extract_doc, clarify_question, approve_user_question, find_documents
 load_dotenv()
@@ -69,6 +70,73 @@ elif st.session_state.step == 2:
     for message in st.session_state.messages[1:]:
         with st.chat_message(message['role']):
             st.markdown(message['content'].content)
+    
+
+
+    if st.session_state.conversation_status == 'doc_filled':
+        selected_doc = st.session_state.selected_doc
+        file_path = f'{doc_path}/user_docs/{selected_doc}.docx'
+        file_name = os.path.basename(file_path)
+        with open(file_path, "rb") as file:
+            file_data = file.read()
+        with st.chat_message('assistant'):
+            answer_doc = """Документ заполнен. Вы можете скачать его ниже.
+                    Могу ли я еще чем-то помочь?"""
+            st.markdown(answer_doc)
+            st.download_button(
+                label="Скачать файл",
+                data=file_data,
+                file_name=file_name,
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            )
+        
+        ### ОЧИСТКА ДАННЫХ СЕССИИ
+        st.session_state.conversation_status = 'base'
+        st.session_state.selected_doc = ''
+        st.session_state.form_data = {}
+    if st.session_state.conversation_status == 'add_document':
+        st.session_state.step = 4
+        st.rerun()
+
+        st.session_state.conversation_status = 'base'
+    if st.session_state.conversation_status == 'choosing_doc':
+        with st.chat_message("assistant"):
+            st.write(f'Найдено документов: {len(st.session_state.relevant_docs)-1}')
+            # st.session_state.relevant_docs
+            selected_doc = st.selectbox('Выберите документ', st.session_state.relevant_docs, index=None)
+        st.session_state.selected_doc = selected_doc
+        # st.rerun()
+        if st.session_state.selected_doc is not None:
+            a = 'Вы выбрали: ' + st.session_state.selected_doc
+            st.session_state.messages.append({'role': 'assistant',
+                                'content': AIMessage(content=a)})
+            st.session_state.conversation_status = 'doc_selected'
+            st.rerun()
+
+    if st.session_state.conversation_status == 'next':
+            st.session_state.conversation_status = 'base'
+            st.session_state.step = 3
+            st.rerun()
+    if st.session_state.conversation_status == 'doc_selected':
+        if st.session_state.selected_doc == 'Нет моего документа':
+            st.session_state.conversation_status = 'add_document'
+            st.rerun()
+
+        print('================')
+        m = st.chat_message("assistant")
+        if m.button("Заполнить документ"):
+            st.session_state.conversation_status = 'base'
+            if not check_schema_existance(st.session_state.selected_doc):
+                with st.spinner("Шаблон документа не найден. Генерируем шаблон..."):
+                    create_schema(st.session_state.selected_doc)
+            st.session_state.step = 3
+            st.rerun()
+        if m.button("Выбрать другой"):
+            st.session_state.conversation_status = 'base'
+            choose_new_doc = 'Ввведите название документа, который вы хотите заполнить'
+            st.session_state.messages.append({'role': 'assistant',
+                                              'content': AIMessage(content=choose_new_doc)})
+            # st.rerun()
 
     if prompt := st.chat_input("Что нужно сделать"):
 
@@ -82,48 +150,70 @@ elif st.session_state.step == 2:
             previous_prompt = st.session_state.previous_prompt
             prompt = f'Вопрос: {previous_prompt}\nУточнение:\n{prompt}'
             st.session_state.conversation_status = 'base'
+        
+        if st.session_state.conversation_status == 'base':
+            input_status = approve_user_question(prompt)
+            if input_status == 'да':
 
-        input_status = approve_user_question(prompt)
-        if input_status == 'да':
-            doc_name = extract_doc(prompt)
-            relevant_docs = find_documents(doc_name)
-            selected_doc = relevant_docs[0]
-            st.session_state.selected_doc = relevant_docs[0]
-            if not check_schema_existance(selected_doc):  # TODO:
-                create_schema(selected_doc)
-            st.session_state.step = 3
-            st.rerun()
+                
+                with st.chat_message('assistant'):
+                    with st.spinner('Идет поиск документов...'):
+                        doc_name = extract_doc(prompt)
+                        relevant_docs = find_documents(doc_name)
+                    st.session_state.conversation_status = 'choosing_doc'
+                    relevant_docs.append('Нет моего документа')
+                    st.session_state.relevant_docs = relevant_docs
+                    st.rerun()
+                    
 
-        else:
-            st.session_state.conversation_status = 'clarify_question'
-            with st.chat_message("assistant"):
-                q = clarify_question(prompt)
-                st.session_state.previous_prompt = prompt
+
+
+            else:
                 st.session_state.conversation_status = 'clarify_question'
-                print('q')
-                print(q)
-                st.write(q)
-            st.session_state.messages.append({"role": "assistant", 
-                                            "content": AIMessage(content=q)})
+                with st.chat_message("assistant"):
+                    q = clarify_question(prompt)
+                    st.session_state.previous_prompt = prompt
+                    st.session_state.conversation_status = 'clarify_question'
+                    print('q')
+                    print(q)
+                    st.write(q)
+                st.session_state.messages.append({"role": "assistant", 
+                                                "content": AIMessage(content=q)})                
+                
+
+            # selected_doc = relevant_docs[0]
+            # st.session_state.selected_doc = relevant_docs[0]
+            # if not check_schema_existance(selected_doc):  # TODO:
+            #     create_schema(selected_doc)
+            # st.session_state.step = 3
+            # st.rerun()
+
+
             
     if st.sidebar.button("Вернуться к описанию"):
         st.session_state.step = 1
         st.rerun()
+    if st.sidebar.button("Добавить документ"):
+        st.session_state.step = 4
+        st.rerun()
 
 
 elif st.session_state.step == 3:
+    
+
     selected_doc = st.session_state.selected_doc
     with open(f'{doc_path}/doc_schemas/{selected_doc}.json', 'r', encoding='utf-8') as f:
         schema = json.load(f)
 
     st.header('Заполнение документа')
     st.markdown(f"""
-                #### Выбран документ: {st.session_state.selected_doc}
+                **Выбран документ:**\n
+                {st.session_state.selected_doc} \n
                 **Описание**:\n
                 {schema['description']} \n\n
                 **В документе нужно заполнить следующие поля:**
                 """)
-
+    
     st.session_state.form_data = {}
 
     with st.form("my_form"):
@@ -146,41 +236,47 @@ elif st.session_state.step == 3:
 
         submitted = st.form_submit_button("Заполнить")
         if submitted:
-            st.write("Введенные данные:")
-            st.write(st.session_state.form_data)
+            
             form_data = st.session_state.form_data
-            
-            # with open('schema.json', 'r', encoding='utf-8') as f:
-            #     schema = json.load(f)
-            
-            # for key in form_data:
-            #     user_answer = form_data[key]
-            #     schema[key]['user_answer'] = user_answer
-            
-            # with open('schema.json', 'w', encoding='utf-8') as f:
-            #     json.dump(schema, f, ensure_ascii=False, indent=4)
-            
-            # fill_fields_rules(selected_doc, form_data)
+            st.write(form_data)
             with st.spinner('Заполняю документ. Пожалуйста, подождите.'):
                 fill_fields_LLM(selected_doc, form_data)
+                
             
-            # Создайте кнопку для загрузки
-    file_path = f'{doc_path}/user_docs/{selected_doc}.docx'
-    with open(file_path, "rb") as file:
-        file_data = file.read()
+            st.session_state.conversation_status = 'doc_filled'
+            st.session_state.step = 2
+            st.rerun()
     
-    # Установите имя файла для загрузки
-    file_name = os.path.basename(file_path)
-    st.download_button(
-        label="Скачать файл",
-        data=file_data,
-        file_name=file_name,
-        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    )
-            # st.session_state.step = 1
-            # st.rerun()
+    
+elif st.session_state.step == 4:
+    st.write(f'Вы можете добавить документ в базу данных.')
+    uploaded_file = st.file_uploader("Загрузите .docx файл", type="docx")
+    folder = f'{doc_path}/raw_docs'
 
 
-    return_to_chat = st.button('Вернуться в чат')
-    if return_to_chat:
+    ### Добавить предобработку
+    # 2. Сгенерировать схему
+    # 4. Использовать название из схемы для сохранения документа
+
+    if uploaded_file is not None: 
+        # Сохраните файл в указанную папку
+        doc_name = os.path.splitext(uploaded_file.name)[0]
+        with open(f'{folder}/{doc_name}.docx', "wb") as f:
+            f.write(uploaded_file.getbuffer())
+        with st.spinner("Ищем пропущенные значения в документе..."):
+            print(1)
+            # if not check_doc_existance(doc_name):
+            #     process_doc(doc_name, new_doc=True)
+        with st.spinner("Создаем шаблон..."):
+            print(2)
+            # create_schema(doc_name, new_doc=True)
+        st.success(f"Документ сохранен в базу данных.")
+    
+    if st.button('Вернуться в чат'):
+        st.session_state.conversation_status = 'base'
+        st.session_state.relevant_docs = None
         st.session_state.step = 2
+        st.rerun()
+
+
+    

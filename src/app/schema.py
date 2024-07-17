@@ -3,8 +3,7 @@ import json
 import os
 import re
 from datetime import datetime
-# from utils import extract_entities_with_context
-
+from input_processing import add_documents_to_vectorstore
 from schema_processing_agents import generate_doc_description, generate_doc_title, generate_questions
 from dotenv import load_dotenv
 import os
@@ -37,8 +36,14 @@ def extract_entities_with_context(text, n=13):
         entities_with_context[entity] = {'context': context,}
 
     return entities_with_context
-def create_schema(doc_name: str):
+def create_schema(doc_name: str, new_doc=False):
     file_path = f'{doc_path}/documents/{doc_name}.docx'
+    
+
+
+    
+    print(f'=== СОЗДАНИЕ ШАБЛОНА ДЛЯ ДОКУМЕНТА {doc_name} ===')
+    
     doc_with_entities = Document(file_path)
     
 
@@ -59,8 +64,18 @@ def create_schema(doc_name: str):
     fill_dict['last_update'] = current_datetime.strftime("%Y-%m-%d")
     fill_dict['title'] = generate_doc_title(fill_dict['description'])
 
+    if new_doc:
+        # Замена названия в загруженном документе на сгенерированное
 
+        new_doc_name = fill_dict['title']
+        new_doc_name = re.sub(r'[\\/*?:"<>|]', "", new_doc_name)
+        new_file_path = f'{doc_path}/documents/{new_doc_name}.docx'
+        
+        os.rename(file_path, new_file_path)
 
-
-    with open(f'{doc_path}/doc_schemas/{doc_name}.json', 'w', encoding='utf-8') as json_file:
+        new_doc_name = fill_dict['title']
+        add_documents_to_vectorstore(new_doc_name)
+        path = f'{doc_path}/doc_schemas/{new_doc_name}.json'
+    
+    with open(path, 'w', encoding='utf-8') as json_file:
         json.dump(fill_dict, json_file, indent=4)

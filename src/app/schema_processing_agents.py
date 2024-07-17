@@ -10,7 +10,6 @@ import re
 from schema_prompts import describe_part_prompt, describe_doc_prompt, generate_question_prompt, generate_doc_title_prompt
 warnings.filterwarnings("ignore")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET_B64")
-BATCH_SIZE = 4
 
 chat = GigaChat(credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False)
 
