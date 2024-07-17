@@ -4,7 +4,13 @@ from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 
 from chroma import Chroma
-from utils import hash_filename
+
+def hash_filename(filename):
+    hash_object = hashlib.sha256()
+    hash_object.update(filename.encode("utf-8"))
+    hash_hex = hash_object.hexdigest()
+
+    return hash_hex
 
 load_dotenv()
 

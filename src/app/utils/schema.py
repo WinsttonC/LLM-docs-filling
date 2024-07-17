@@ -7,7 +7,7 @@ from docx import Document
 from dotenv import load_dotenv
 
 from input_processing import add_documents_to_vectorstore
-from schema_processing_agents import (
+from agents.schema_processing_agents import (
     generate_doc_description,
     generate_doc_title,
     generate_questions,

@@ -1,5 +1,20 @@
 import chromadb
 from chromadb.api.types import EmbeddingFunction, QueryResult
+from chromadb.utils import embedding_functions
+
+embedding_name = "text-embedding-3-large"
+collection_name = "embedding_name"
+api_key = os.getenv("OPENAI_API_KEY")
+api_base = os.getenv("BASE_URL_OPENAI_API")
+doc_path = os.getenv("DOCUMENTS_PATH")
+folder_path = f"{doc_path}/documents"
+
+embedding_model = embedding_functions.OpenAIEmbeddingFunction(
+    model_name=embedding_name,
+    api_key=api_key,
+    api_base=api_base,
+)
+
 
 
 class Chroma:
@@ -76,3 +91,27 @@ class Chroma:
                 include=["metadatas", "documents", "distances"],
                 n_results=1,
             )
+
+def find_documents(question):
+    client = Chroma(f"{doc_path}/vect_docs", embedding_model, collection_name)
+
+    docs = client.get_relevant_docs(question)
+    docs = [
+        doc
+        for doc, distance in zip(docs["documents"][0], docs["distances"][0])
+        if distance < 0.8  # TODO
+    ]
+
+    return docs
+
+
+def add_documents_to_vectorstore(doc_name):
+    client = Chroma(f"{doc_path}/vect_docs", embedding_model, collection_name)
+
+    document_titles = [doc_name]
+
+    data_dict = {
+        "docs": document_titles,
+    }
+
+    client.add_docs(data_dict)

@@ -3,10 +3,11 @@ import os
 
 import streamlit as st
 from dotenv import load_dotenv
+from config import description
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
 
 from fill_fields_LLM import fill_fields_LLM
-from input_processing import (
+from agents.input_processing_agents import (
     approve_user_question,
     clarify_question,
     extract_doc,
@@ -266,12 +267,10 @@ elif st.session_state.step == 4:
         with open(f"{folder}/{doc_name}.docx", "wb") as f:
             f.write(uploaded_file.getbuffer())
         with st.spinner("Ищем пропущенные значения в документе..."):
-            print(1)
-            # if not check_doc_existance(doc_name):
-            #     process_doc(doc_name, new_doc=True)
+            if not check_doc_existance(doc_name):
+                process_doc(doc_name, new_doc=True)
         with st.spinner("Создаем шаблон..."):
-            print(2)
-            # create_schema(doc_name, new_doc=True)
+            create_schema(doc_name, new_doc=True)
         st.success("Документ сохранен в базу данных.")
 
     if st.button("Вернуться в чат"):

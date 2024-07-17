@@ -6,15 +6,12 @@ from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
 
+from prompts import generate_question_prompt, generate_doc_title_prompt, describe_part_prompt, describe_doc_prompt
+
 load_dotenv()
 import re
 
-from schema_prompts import (
-    describe_doc_prompt,
-    describe_part_prompt,
-    generate_doc_title_prompt,
-    generate_question_prompt,
-)
+
 
 warnings.filterwarnings("ignore")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET_B64")
