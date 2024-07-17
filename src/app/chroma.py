@@ -37,7 +37,7 @@ class Chroma:
         # metadatas = [
         #     {"source": sources[i], "question": questions[i]} for i in range(len(docs))
         # ]
-        
+
         start = 0
         end = len(docs)
         while start < end:
@@ -46,7 +46,7 @@ class Chroma:
                 # metadatas=metadatas[start : start + 100],
                 ids=ids[start : start + 100],
             )
-            
+
             start += 100
 
     def get_relevant_docs(self, query: str) -> QueryResult:

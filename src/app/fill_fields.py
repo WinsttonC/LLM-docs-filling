@@ -4,6 +4,7 @@ import warnings
 
 from docx import Document
 from dotenv import load_dotenv
+from utils import replace_substrings
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
 
@@ -21,13 +22,33 @@ chat = GigaChat(
 doc_path = os.getenv("DOCUMENTS_PATH")
 
 
+
+def fill_fields_rules(doc_name: str, fields_dict: dict):
+    path_to_docx = f"{doc_path}/documents/{doc_name}.docx"
+
+    str_document = Document(path_to_docx)
+    str_document = [p.text for p in str_document.paragraphs]
+    for i in range(len(str_document)):
+        str_document[i] = replace_substrings(str_document[i], fields_dict)
+
+    final_document = Document()
+
+    for text_block in str_document:
+        final_document.add_paragraph(text_block)
+
+    final_document.save(f"{doc_path}/user_docs/{doc_name}.docx")
+
+
+
+
+
 def fill_fields_LLM(doc_name: str, fields_dict: dict):
     path_to_docx = f"{doc_path}/documents/{doc_name}.docx"
 
     document = Document(path_to_docx)
     paragraphs = [p.text for p in document.paragraphs]
     final_document = Document()
-    # filled_text = []
+
     length = len(paragraphs)
     for i in range(0, length, BATCH_SIZE):
         batch = "\n".join(paragraphs[i : min(i + BATCH_SIZE, length)])
@@ -48,12 +69,7 @@ def fill_fields_LLM(doc_name: str, fields_dict: dict):
             res = chat(messages)
 
             final_document.add_paragraph(res.content)
-            # filled_text.append(res.content)
         else:
             final_document.add_paragraph(batch)
-            # filled_text.append(batch)
-
-        # for text_block in filled_text:
-        #     final_document.add_paragraph(text_block)
 
         final_document.save(f"{doc_path}/user_docs/{doc_name}.docx")
