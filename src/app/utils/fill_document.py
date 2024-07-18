@@ -2,10 +2,11 @@ import os
 import re
 import warnings
 
-from .agents.filling_fields_agent import fill_fields
 from docx import Document
 from dotenv import load_dotenv
 from langchain_community.chat_models.gigachat import GigaChat
+
+from .agents.filling_fields_agent import fill_fields
 
 load_dotenv()
 
@@ -13,14 +14,12 @@ warnings.filterwarnings("ignore")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET_B64")
 BATCH_SIZE = 1
 
-chat = GigaChat(
-    credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False
-) 
+chat = GigaChat(credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False)
 doc_path = os.getenv("DOCUMENTS_PATH")
 
 
 def replace_substrings(input_string, fields_dict):
-    '''
+    """
     Заменяет подстроки вида [[Описание пропуска]] на
     данные из словаря с ответами пользователя.
 
@@ -35,7 +34,7 @@ def replace_substrings(input_string, fields_dict):
     ---------
     result_string : str
         Строка, заполненная данными пользователя.
-    '''
+    """
 
     pattern = r"\[\[(.*?)\]\]"
 
@@ -50,9 +49,9 @@ def replace_substrings(input_string, fields_dict):
 
 
 def fill_fields_rules(doc_name: str, fields_dict: dict):
-    '''
-    Заменяет все подстроки вида [[Описание пропуска]] в документе 
-    с использованием регулярных выражений. 
+    """
+    Заменяет все подстроки вида [[Описание пропуска]] в документе
+    с использованием регулярных выражений.
 
     Parameters
     ----------
@@ -65,7 +64,7 @@ def fill_fields_rules(doc_name: str, fields_dict: dict):
     ---------
     None
         Сохраняет заполненный документ с хранилище с данными пользователя.
-    '''
+    """
 
     path_to_docx = f"{doc_path}/documents/{doc_name}.docx"
 
@@ -83,14 +82,14 @@ def fill_fields_rules(doc_name: str, fields_dict: dict):
 
 
 def fill_fields_LLM(doc_name: str, fields_dict: dict):
-    '''
+    """
     Заменяет все подстроки вида [[Описание пропуска]]]
-    в документе с использованием LLM. 
+    в документе с использованием LLM.
         1. Разбивает документ на блоки по абзацам
         2. Заполняет пропуски в каждом абзаце,
         используя данные пользователя
         2*. Если пропуски остались, повторяет 2 шаг
-        3. Сохраняет заполненный документ в хранилище 
+        3. Сохраняет заполненный документ в хранилище
         с файлами пользователя.
 
     Parameters
@@ -104,7 +103,7 @@ def fill_fields_LLM(doc_name: str, fields_dict: dict):
     ---------
     None
         Сохраняет заполненный документ с хранилище с файлами пользователя.
-    '''
+    """
 
     path_to_docx = f"{doc_path}/documents/{doc_name}.docx"
 

@@ -1,0 +1,2 @@
+[tool.ruff.format]
+docstring-code-format = true

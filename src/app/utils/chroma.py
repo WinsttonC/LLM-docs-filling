@@ -23,7 +23,7 @@ embedding_model = embedding_functions.OpenAIEmbeddingFunction(
 
 
 def hash_filename(filename):
-    '''
+    """
     Функция для создания id документов для векторного хранилища.
 
     Parameters
@@ -33,7 +33,7 @@ def hash_filename(filename):
     Returns
     ---------
     hash_hex : str
-    '''
+    """
     hash_object = hashlib.sha256()
     hash_object.update(filename.encode("utf-8"))
     hash_hex = hash_object.hexdigest()
@@ -118,8 +118,8 @@ class Chroma:
 
 
 def find_documents(question):
-    '''
-    Функция для поиска релеватных документов в векторном хранилище 
+    """
+    Функция для поиска релеватных документов в векторном хранилище
     с ограничением на расстояние между векторами.
 
     Parameters
@@ -130,9 +130,9 @@ def find_documents(question):
     Returns
     ---------
     docs : list[str]
-        Список релевантных запросу документов из 
+        Список релевантных запросу документов из
         векторного хранилища.
-    '''
+    """
     client = Chroma(f"{doc_path}/vect_docs", embedding_model, collection_name)
 
     docs = client.get_relevant_docs(question)
@@ -146,9 +146,9 @@ def find_documents(question):
 
 
 def add_documents_to_vectorstore(doc_name):
-    '''
+    """
     Функция для добавления документов в
-    векторное хранилище. 
+    векторное хранилище.
 
     Parameters
     ----------
@@ -157,7 +157,7 @@ def add_documents_to_vectorstore(doc_name):
     Returns
     ---------
     None
-    '''
+    """
     client = Chroma(f"{doc_path}/vect_docs", embedding_model, collection_name)
 
     document_titles = [doc_name]

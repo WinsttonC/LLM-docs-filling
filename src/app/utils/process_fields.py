@@ -1,9 +1,10 @@
 import os
 import re
 
-from .agents.find_fields_agent import find_fields
 from docx import Document
 from dotenv import load_dotenv
+
+from .agents.find_fields_agent import find_fields
 
 load_dotenv()
 
@@ -13,7 +14,7 @@ BATCH_SIZE = 1
 
 
 def is_valid_string(input_string):
-    '''
+    """
     Функция для проверки, является ли строка пропуском(__).
 
     Parameters
@@ -23,16 +24,16 @@ def is_valid_string(input_string):
     Returns
     ---------
     True/False
-    '''
+    """
 
     pattern = r"^[_. ]+$"
     return not bool(re.match(pattern, input_string))
 
 
 def shorten_blanks(input_string):
-    '''
+    """
     Заменяет длинные пропуски(__) в документе на пропуски
-    фиксированной длины, чтобы упростить поиск в дальнейшем 
+    фиксированной длины, чтобы упростить поиск в дальнейшем
     и избавиться от строк, состоящий только из __.
 
     Parameters
@@ -43,7 +44,7 @@ def shorten_blanks(input_string):
     ---------
     output_string : str
         Обновленная строка с пропусками или пустая строка.
-    '''
+    """
 
     if is_valid_string(input_string):
         pattern = r"(_{2,})"
@@ -55,8 +56,8 @@ def shorten_blanks(input_string):
 
 
 def create_fields_template(doc_name, new_doc=False):
-    '''
-    Ищет пропуски в неразмеченном документе и заменяет их на шаблон 
+    """
+    Ищет пропуски в неразмеченном документе и заменяет их на шаблон
     с описанием, например [[ФИО истца]].
         1. Разбивает текст на блоки по абзацам
         2. Каждый абзац с пропуском передается в LLM
@@ -74,8 +75,8 @@ def create_fields_template(doc_name, new_doc=False):
     None
         Сохраняет документ с замененными пропусками
         в хранилище с размеченными документами.
-    '''
-    
+    """
+
     if new_doc:
         file_path = f"{doc_path}/raw_docs/{doc_name}.docx"
     else:
@@ -90,16 +91,15 @@ def create_fields_template(doc_name, new_doc=False):
     for i in range(0, length, BATCH_SIZE):
         batch = paragraphs[i : min(i + BATCH_SIZE, length)]
         input_text = "\n".join(batch)
-        
-        if '__' in input_text:
-            
+
+        if "__" in input_text:
             input_text = f"Строка:\n {input_text}\nОтвет:"
             content = find_fields(input_text)
-            if '__' in content:
+            if "__" in content:
                 content = find_fields(input_text)
 
             final_text.append(content)
-        
+
         else:
             final_text.append(input_text)
 

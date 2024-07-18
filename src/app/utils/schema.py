@@ -3,13 +3,14 @@ import os
 import re
 from datetime import datetime
 
+from docx import Document
+from dotenv import load_dotenv
+
 from .agents.schema_processing_agents import (
     generate_doc_description,
     generate_doc_title,
     generate_questions,
 )
-from docx import Document
-from dotenv import load_dotenv
 from .chroma import add_documents_to_vectorstore
 
 load_dotenv()
@@ -18,7 +19,7 @@ doc_path = os.getenv("DOCUMENTS_PATH")
 
 
 def check_doc_existance(doc_name):
-    '''
+    """
     Проверяет, если документ с таким названием в
     хранилище с размеченными документами.
 
@@ -29,9 +30,8 @@ def check_doc_existance(doc_name):
     Returns
     ---------
     True/False
-    '''
+    """
 
-    
     file_path = f"{doc_path}/documents/{doc_name}.docx"
     if os.path.exists(file_path):
         return True
@@ -40,7 +40,7 @@ def check_doc_existance(doc_name):
 
 
 def check_schema_existance(doc_name):
-    '''
+    """
     Проверяет, если схема для документа с таким названием в
     хранилище.
 
@@ -51,7 +51,7 @@ def check_schema_existance(doc_name):
     Returns
     ---------
     True/False
-    '''
+    """
     file_path = f"{doc_path}/doc_schemas/{doc_name}.json"
     if os.path.exists(file_path):
         return True
@@ -60,7 +60,7 @@ def check_schema_existance(doc_name):
 
 
 def extract_entities_with_context(text, n=13):
-    '''
+    """
     Проверяет, если документ с таким названием в
     хранилище с размеченными документами.
 
@@ -71,17 +71,17 @@ def extract_entities_with_context(text, n=13):
     n : int
         Количество слов до и после пропуска, которые
         будут добавлены в его контекст.
-    
+
     Returns
     ---------
     entities_with_context : dict
         Словарь пропусков из документа с контекстом, в котором
-        они находятся. 
-    
+        они находятся.
+
     Example
     ---------
     {'ФИО заявителя': {'context': 'Контекст из документа'}}
-    '''
+    """
 
     pattern = r"\[\[(.*?)\]\]"
     matches = re.finditer(pattern, text)
@@ -113,13 +113,13 @@ def extract_entities_with_context(text, n=13):
 
 
 def create_schema(doc_name: str, new_doc=False):
-    '''
+    """
     Создает схему для документа с названием doc_name.
         1. Извлекает описание пропусков из документа
         2. Для каждого пропуска генерирует уточняющий вопрос
         3. Генерирует характеристику документа, испольльзуя текст (с разбивкой на блоки)
         4. Генерирует заголовок, используя характеристику документа
-        4*. Если документ загружен пользователем, использует сгенерированный 
+        4*. Если документ загружен пользователем, использует сгенерированный
         заголовок в качестве имени файла схемы при сохранении.
 
     Parameters
@@ -129,12 +129,12 @@ def create_schema(doc_name: str, new_doc=False):
     new_doc : bool
         True - документа загружен пользователем.
         False - документ есть в хранилище.
-        
+
     Returns
     ---------
     None
-        Сохраняет схему документа в хранилище. 
-    '''
+        Сохраняет схему документа в хранилище.
+    """
 
     file_path = f"{doc_path}/documents/{doc_name}.docx"
 
@@ -159,7 +159,6 @@ def create_schema(doc_name: str, new_doc=False):
 
     # Замена названия в загруженном документе на сгенерированное
     if new_doc:
-
         new_doc_name = fill_dict["title"]
         new_doc_name = re.sub(r'[\\/*?:"<>|]', "", new_doc_name)
         new_file_path = f"{doc_path}/documents/{new_doc_name}.docx"

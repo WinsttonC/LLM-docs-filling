@@ -2,18 +2,18 @@ import json
 import os
 
 import streamlit as st
+from config import description
+from dotenv import load_dotenv
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
 from utils.agents.input_processing_agents import (
     approve_user_question,
     clarify_question,
     extract_doc,
 )
 from utils.chroma import find_documents
-from config import description
-from dotenv import load_dotenv
 from utils.fill_document import fill_fields_LLM
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from utils.schema import check_doc_existance, check_schema_existance, create_schema
 from utils.process_fields import create_fields_template
+from utils.schema import check_doc_existance, check_schema_existance, create_schema
 
 load_dotenv()
 
@@ -28,7 +28,6 @@ doc_path = os.getenv("DOCUMENTS_PATH")
 # 4 - Загрузка собственного документа
 # 5 - Загрузка обработанного шаблона
 # ===============================================================
-
 
 
 chat_prompt = "Старайся максимально точно ответить на вопрос пользователя:"
@@ -100,14 +99,16 @@ elif st.session_state.step == 2:
         st.rerun()
 
         st.session_state.conversation_status = "base"
-    
+
     if st.session_state.conversation_status == "choosing_doc":
         if len(st.session_state.relevant_docs) == 1:
             with st.chat_message("assistant"):
-                st.write(f"Документов по вашему запросу не найдено. Вы можете добавить шаблон документа самостоятельно")
-                if st.button('Добавить документ', key='0 docs'):
+                st.write(
+                    "Документов по вашему запросу не найдено. Вы можете добавить шаблон документа самостоятельно"
+                )
+                if st.button("Добавить документ", key="0 docs"):
                     st.session_state.relevant_docs = []
-                    st.session_state.conversation_status = 'base'
+                    st.session_state.conversation_status = "base"
                     st.session_state.step = 4
                     st.rerun()
         else:
@@ -188,7 +189,7 @@ elif st.session_state.step == 2:
                     st.write(q)
                 st.session_state.messages.append(
                     {"role": "assistant", "content": AIMessage(content=q)}
-                )         
+                )
 
     if st.sidebar.button("Вернуться к описанию"):
         st.session_state.step = 1
@@ -237,7 +238,7 @@ elif st.session_state.step == 3:
             st.session_state.conversation_status = "doc_filled"
             st.session_state.step = 2
             st.rerun()
-    
+
     if st.sidebar.button("Вернуться к описанию"):
         st.session_state.selected_doc = None
         st.session_state.step = 1
@@ -264,11 +265,9 @@ elif st.session_state.step == 4:
             new_doc_name = create_schema(doc_name, new_doc=True)
         st.success("Документ сохранен в базу данных.")
         st.session_state.generated_template = new_doc_name
-        
+
         st.session_state.step = 5
         st.rerun()
-
-
 
     if st.button("Вернуться в чат"):
         st.session_state.conversation_status = "base"
@@ -285,30 +284,29 @@ elif st.session_state.step == 5:
     with open(file_path, "rb") as file:
         file_data = file.read()
 
-    with open(schema_path, "r", encoding='utf-8') as file:
+    with open(schema_path, "r", encoding="utf-8") as file:
         schema = json.load(file)
 
-    description = schema['description']
-    
+    description = schema["description"]
+
     st.markdown(f""" ## {doc_name}
     **Описание:**\n
     {description} \n
     """)
 
     st.download_button(
-            label="Скачать шаблон документа",
-            data=file_data,
-            file_name=file_name,
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        )
-    
+        label="Скачать шаблон документа",
+        data=file_data,
+        file_name=file_name,
+        mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    )
 
-    if st.button("Вернуться в чат", key='step 5 chat'):
+    if st.button("Вернуться в чат", key="step 5 chat"):
         st.session_state.generated_template = None
         st.session_state.conversation_status = "base"
         st.session_state.step = 2
         st.rerun()
-    if st.button("Вернуться к описанию", key='step 5 desc'):
+    if st.button("Вернуться к описанию", key="step 5 desc"):
         st.session_state.generated_template = None
         st.session_state.conversation_status = "base"
         st.session_state.step = 1

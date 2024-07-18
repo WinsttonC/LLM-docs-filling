@@ -7,11 +7,10 @@ load_dotenv()
 
 doc_path = os.getenv("DOCUMENTS_PATH")
 
-import os
-
 folder_path = f"{doc_path}/documents/"
 file_names = os.listdir(folder_path)
-doc_names = '\n'.join(['- ' + os.path.splitext(name)[0] for name in file_names])
+doc_names = "\n".join(["- " + os.path.splitext(name)[0] for name in file_names])
+
 
 def description():
     st.markdown("Мой телеграм: [@winst_y](https://t.me/winst_y)")
@@ -23,8 +22,7 @@ def description():
     На данный момент чат принимает только DOCX документы, но все алгоритмы 
     рассчитаны на обработку строк, поэтому в скором времени будут добавлены
     другие форматы (PDF, Md, txt).
-    """
-    )
+    """)
 
     img_path = f"{doc_path}/images"
 
@@ -56,7 +54,7 @@ def description():
     col1, col2 = st.columns(2)
     col1.metric("Точность поиска пропусков.\nGigaChat Lite", "75-78%")
     col2.metric("Точность поиска пропусков.\nGigaChat Pro", "83-88%", "~9%")
-    
+
     st.markdown("""Для расчета **точности поиска релевантных документов**
     нужно большее количество документов в базе данных.""")
 
@@ -67,7 +65,7 @@ def description():
     - Заполнение с использованием LLM было близко к 100%, но с GigaChat Lite иногда 
     возникают проблемы с пропуском строк.
     """)
-    
+
     st.markdown("""
     ### Краткая характеристика
 
