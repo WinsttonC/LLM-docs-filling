@@ -105,7 +105,6 @@ elif st.session_state.step == 2:
         if len(st.session_state.relevant_docs) == 1:
             with st.chat_message("assistant"):
                 st.write(f"Документов по вашему запросу не найдено. Вы можете добавить шаблон документа самостоятельно")
-                # st.session_state.relevant_docs
                 if st.button('Добавить документ', key='0 docs'):
                     st.session_state.relevant_docs = []
                     st.session_state.conversation_status = 'base'
@@ -114,7 +113,6 @@ elif st.session_state.step == 2:
         else:
             with st.chat_message("assistant"):
                 st.write(f"Найдено документов: {len(st.session_state.relevant_docs)-1}")
-                # st.session_state.relevant_docs
                 selected_doc = st.selectbox(
                     "Выберите документ", st.session_state.relevant_docs, index=None
                 )
@@ -227,16 +225,12 @@ elif st.session_state.step == 3:
         for i in range(len(field_names)):
             a = st.text_input(questions[i], key=f"text_input_{i}")
             st.write("\n")
-            # st.write(f'{fields[i]}: {a}')
-            # value = st.text_input(f'Текст {elem}', key=f'text_input_{elem}')
-            # # Сохранение значений в словаре session_state
 
             st.session_state.form_data[field_names[i]] = a
 
         submitted = st.form_submit_button("Заполнить")
         if submitted:
             form_data = st.session_state.form_data
-            # st.write(form_data)
             with st.spinner("Заполняю документ. Пожалуйста, подождите."):
                 fill_fields_LLM(selected_doc, form_data)
 
@@ -260,7 +254,6 @@ elif st.session_state.step == 4:
     folder = f"{doc_path}/raw_docs"
 
     if uploaded_file is not None:
-        # Сохраните файл в указанную папку
         doc_name = os.path.splitext(uploaded_file.name)[0]
         with open(f"{folder}/{doc_name}.docx", "wb") as f:
             f.write(uploaded_file.getbuffer())
