@@ -3,14 +3,14 @@ import os
 import re
 from datetime import datetime
 
-from agents.schema_processing_agents import (
+from .agents.schema_processing_agents import (
     generate_doc_description,
     generate_doc_title,
     generate_questions,
 )
 from docx import Document
 from dotenv import load_dotenv
-from input_processing import add_documents_to_vectorstore
+from .chroma import add_documents_to_vectorstore
 
 load_dotenv()
 

@@ -1,6 +1,6 @@
 import os
 
-from chroma import Chroma
+from .chroma import Chroma
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
 

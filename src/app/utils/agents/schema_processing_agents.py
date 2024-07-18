@@ -6,7 +6,7 @@ from docx import Document
 from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
-from prompts.schema_prompts import (
+from .prompts.schema_prompts import (
     describe_doc_prompt,
     describe_part_prompt,
     generate_doc_title_prompt,

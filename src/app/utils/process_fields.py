@@ -1,7 +1,7 @@
 import os
 import re
 
-from agents.find_fields_agent import find_fields
+from .agents.find_fields_agent import find_fields
 from docx import Document
 from dotenv import load_dotenv
 

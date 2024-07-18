@@ -2,7 +2,7 @@ import os
 import re
 import warnings
 
-from agents.filling_fields_agent import fill_fields
+from .agents.filling_fields_agent import fill_fields
 from docx import Document
 from dotenv import load_dotenv
 from langchain_community.chat_models.gigachat import GigaChat

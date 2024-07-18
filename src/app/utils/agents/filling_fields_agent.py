@@ -4,7 +4,7 @@ import warnings
 from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
-from prompts.field_prompts import filling_prompt
+from .prompts.field_prompts import filling_prompt
 
 warnings.filterwarnings("ignore")
 

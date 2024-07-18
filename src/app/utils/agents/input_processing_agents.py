@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
 
-from prompts.input_prompts import approve_prompt, clarify_prompt, extract_doc_prompt
+from .prompts.input_prompts import approve_prompt, clarify_prompt, extract_doc_prompt
 
 import warnings
 warnings.filterwarnings("ignore")

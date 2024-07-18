@@ -6,13 +6,13 @@ from utils.agents.input_processing_agents import (
     approve_user_question,
     clarify_question,
     extract_doc,
-    find_documents,
 )
+from utils.chroma import find_documents
 from config import description
 from dotenv import load_dotenv
-from fill_fields_LLM import fill_fields_LLM
+from utils.fill_document import fill_fields_LLM
 from langchain.schema import AIMessage, HumanMessage, SystemMessage
-from schema import check_doc_existance, check_schema_existance, create_schema
+from utils.schema import check_doc_existance, check_schema_existance, create_schema
 from utils.process_fields import create_fields_template
 
 load_dotenv()
