@@ -27,7 +27,6 @@ def check_doc_existance(doc_name):
 
 def check_schema_existance(doc_name):
     file_path = f"{doc_path}/doc_schemas/{doc_name}.json"
-    # file_path = f'doc_schemas/{doc_name}'
     if os.path.exists(file_path):
         return True
     else:
