@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore")
 GIGACHAT_CLIENT_SECRET = os.getenv("GIGACHAT_CLIENT_SECRET_B64")
 
 chat = GigaChat(
-    credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False
+    credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False, model='GigaChat-Pro'
 )  # model='GigaChat-Pro'
 
 

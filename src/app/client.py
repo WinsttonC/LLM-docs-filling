@@ -28,7 +28,9 @@ doc_path = os.getenv("DOCUMENTS_PATH")
 # 4 - Загрузка собственного документа
 # ===============================================================
 
-chat_prompt = "Отвечай на вопросы пользователя"
+
+
+chat_prompt = "Старайся максимально точно ответить на вопрос пользователя:"
 if "step" not in st.session_state:
     st.session_state.step = 1
 if "messages" not in st.session_state:
@@ -43,12 +45,13 @@ if "selected_doc" not in st.session_state:
     st.session_state.selected_doc = None
 if "form_data" not in st.session_state:
     st.session_state.form_data = {}
-
+if "clarification_steps" not in st.session_state:
+    st.session_state.clarification_steps = 0
 
 if st.session_state.step == 1:
     st.title("Заполнение документов с GigaChat")
 
-    if st.button("Заполнить свой документ"):
+    if st.button("Перейти в чат"):
         st.session_state.step = 2
         st.rerun()
     description()
@@ -95,21 +98,31 @@ elif st.session_state.step == 2:
         st.session_state.conversation_status = "base"
     
     if st.session_state.conversation_status == "choosing_doc":
-        with st.chat_message("assistant"):
-            st.write(f"Найдено документов: {len(st.session_state.relevant_docs)-1}")
-            # st.session_state.relevant_docs
-            selected_doc = st.selectbox(
-                "Выберите документ", st.session_state.relevant_docs, index=None
-            )
-        st.session_state.selected_doc = selected_doc
+        if len(st.session_state.relevant_docs) == 1:
+            with st.chat_message("assistant"):
+                st.write(f"Документов по вашему запросу не найдено. Вы можете добавить шаблон документа самостоятельно")
+                # st.session_state.relevant_docs
+                if st.button('Добавить документ', key='0 docs'):
+                    st.session_state.relevant_docs = []
+                    st.session_state.conversation_status = 'base'
+                    st.session_state.step = 4
+                    st.rerun()
+        else:
+            with st.chat_message("assistant"):
+                st.write(f"Найдено документов: {len(st.session_state.relevant_docs)-1}")
+                # st.session_state.relevant_docs
+                selected_doc = st.selectbox(
+                    "Выберите документ", st.session_state.relevant_docs, index=None
+                )
+            st.session_state.selected_doc = selected_doc
 
-        if st.session_state.selected_doc is not None:
-            a = "Вы выбрали: " + st.session_state.selected_doc
-            st.session_state.messages.append(
-                {"role": "assistant", "content": AIMessage(content=a)}
-            )
-            st.session_state.conversation_status = "doc_selected"
-            st.rerun()
+            if st.session_state.selected_doc is not None:
+                a = "Вы выбрали: " + st.session_state.selected_doc
+                st.session_state.messages.append(
+                    {"role": "assistant", "content": AIMessage(content=a)}
+                )
+                st.session_state.conversation_status = "doc_selected"
+                st.rerun()
 
     if st.session_state.conversation_status == "next":
         st.session_state.conversation_status = "base"
@@ -146,13 +159,15 @@ elif st.session_state.step == 2:
         with st.chat_message("user"):
             st.markdown(prompt)
         if st.session_state.conversation_status == "clarify_question":
+            st.session_state.clarification_steps += 1
             previous_prompt = st.session_state.previous_prompt
             prompt = f"Вопрос: {previous_prompt}\nУточнение:\n{prompt}"
             st.session_state.conversation_status = "base"
 
         if st.session_state.conversation_status == "base":
             input_status = approve_user_question(prompt)
-            if input_status == "да":
+            if input_status == "да" or st.session_state.clarification_steps > 1:
+                st.session_state.clarification_steps = 0
                 with st.chat_message("assistant"):
                     with st.spinner("Идет поиск документов..."):
                         doc_name = extract_doc(prompt)
@@ -171,7 +186,7 @@ elif st.session_state.step == 2:
                     st.write(q)
                 st.session_state.messages.append(
                     {"role": "assistant", "content": AIMessage(content=q)}
-                )
+                )         
 
     if st.sidebar.button("Вернуться к описанию"):
         st.session_state.step = 1
@@ -240,10 +255,6 @@ elif st.session_state.step == 4:
     uploaded_file = st.file_uploader("Загрузите .docx файл", type="docx")
     folder = f"{doc_path}/raw_docs"
 
-    ### Добавить предобработку
-    # 2. Сгенерировать схему
-    # 4. Использовать название из схемы для сохранения документа
-
     if uploaded_file is not None:
         # Сохраните файл в указанную папку
         doc_name = os.path.splitext(uploaded_file.name)[0]
@@ -253,11 +264,55 @@ elif st.session_state.step == 4:
             if not check_doc_existance(doc_name):
                 create_fields_template(doc_name, new_doc=True)
         with st.spinner("Создаем шаблон..."):
-            create_schema(doc_name, new_doc=True)
+            new_doc_name = create_schema(doc_name, new_doc=True)
         st.success("Документ сохранен в базу данных.")
+        st.session_state.generated_template = new_doc_name
+        
+        st.session_state.step = 5
+        st.rerun()
+
+
 
     if st.button("Вернуться в чат"):
         st.session_state.conversation_status = "base"
-        st.session_state.relevant_docs = None
+        st.session_state.relevant_docs = []
         st.session_state.step = 2
+        st.rerun()
+
+
+elif st.session_state.step == 5:
+    doc_name = st.session_state.generated_template
+    file_path = f"{doc_path}/documents/{doc_name}.docx"
+    schema_path = f"{doc_path}/doc_schemas/{doc_name}.json"
+    file_name = os.path.basename(file_path)
+    with open(file_path, "rb") as file:
+        file_data = file.read()
+
+    with open(schema_path, "r", encoding='utf-8') as file:
+        schema = json.load(file)
+
+    description = schema['description']
+    
+    st.markdown(f""" ## {doc_name}
+    **Описание:**\n
+    {description} \n
+    """)
+
+    st.download_button(
+            label="Скачать шаблон документа",
+            data=file_data,
+            file_name=file_name,
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        )
+    
+
+    if st.button("Вернуться в чат", key='step 5 chat'):
+        st.session_state.generated_template = None
+        st.session_state.conversation_status = "base"
+        st.session_state.step = 2
+        st.rerun()
+    if st.button("Вернуться к описанию", key='step 5 desc'):
+        st.session_state.generated_template = None
+        st.session_state.conversation_status = "base"
+        st.session_state.step = 1
         st.rerun()

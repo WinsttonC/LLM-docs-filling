@@ -97,9 +97,10 @@ def create_schema(doc_name: str, new_doc=False):
 
         os.rename(file_path, new_file_path)
 
-        new_doc_name = fill_dict["title"]
         add_documents_to_vectorstore(new_doc_name)
         path = f"{doc_path}/doc_schemas/{new_doc_name}.json"
 
     with open(path, "w", encoding="utf-8") as json_file:
         json.dump(fill_dict, json_file, indent=4)
+
+    return new_doc_name

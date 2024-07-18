@@ -9,7 +9,7 @@ load_dotenv()
 
 
 doc_path = os.getenv("DOCUMENTS_PATH")
-BATCH_SIZE = 2
+BATCH_SIZE = 1
 
 
 def is_valid_string(input_string):
@@ -40,18 +40,21 @@ def create_fields_template(doc_name, new_doc=False):
 
     final_text = []
     paragraphs = [shorten_blanks(p.text) for p in doc.paragraphs]
-    pattern = r"_{2,}"
+    # pattern = r"_{2,}"
 
     length = len(paragraphs)
     for i in range(0, length, BATCH_SIZE):
         batch = paragraphs[i : min(i + BATCH_SIZE, length)]
         input_text = "\n".join(batch)
-        match = re.search(pattern, input_text)
-        if match:
+        # match = re.search(pattern, input_text)
+        if '__' in input_text:
+            
             input_text = f"Строка:\n {input_text}\nОтвет:"
 
             content = find_fields(input_text)
-
+            if '__' in content:
+                input_text = f"Строка:\n {input_text}\nОтвет:"
+                content = find_fields(input_text)
             final_text.append(content)
         else:
             final_text.append(input_text)
