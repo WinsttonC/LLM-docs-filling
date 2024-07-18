@@ -20,7 +20,6 @@ load_dotenv()
 APP_URL = os.getenv("APP_URL")
 doc_path = os.getenv("DOCUMENTS_PATH")
 
-
 # ===============================================================
 # СТРАНИЦЫ
 # 1 - Описание
@@ -46,37 +45,20 @@ if "form_data" not in st.session_state:
     st.session_state.form_data = {}
 
 
-# if "model" not in st.session_state:
-#     st.session_state.model = None
-def fill_docs():
-    st.session_state.selected_doc = selected_doc
-    st.session_state.messages.append(
-        {
-            "role": "assistant",
-            "content": AIMessage(content=f"Вы выбрали: {selected_doc}"),
-        }
-    )
-
-
 if st.session_state.step == 1:
     st.title("Заполнение документов с GigaChat")
-    st.markdown("Мой телеграм: [@winst_y](https://t.me/winst_y)")
-    st.markdown(
-        "Репозиторий с кодом проекта: [Git](https://github.com/WinsttonC/LLM-docs-filling)"
-    )
 
     if st.button("Заполнить свой документ"):
         st.session_state.step = 2
         st.rerun()
     description()
-    # st.markdown(description)
 
 elif st.session_state.step == 2:
     st.header("Заполнение документов")
     st.markdown("""
                 Чтобы заполнить документ, напишите в чат.
                 Если документа нет в базе, его можно добавить, используя 
-                кнопку ниже.
+                кнопку на боковой панели.
                 """)
 
     for message in st.session_state.messages[1:]:
@@ -92,6 +74,7 @@ elif st.session_state.step == 2:
         with st.chat_message("assistant"):
             answer_doc = """Документ заполнен. Вы можете скачать его ниже.
                     Могу ли я еще чем-то помочь?"""
+
             st.markdown(answer_doc)
             st.download_button(
                 label="Скачать файл",
@@ -104,11 +87,13 @@ elif st.session_state.step == 2:
         st.session_state.conversation_status = "base"
         st.session_state.selected_doc = ""
         st.session_state.form_data = {}
+
     if st.session_state.conversation_status == "add_document":
         st.session_state.step = 4
         st.rerun()
 
         st.session_state.conversation_status = "base"
+    
     if st.session_state.conversation_status == "choosing_doc":
         with st.chat_message("assistant"):
             st.write(f"Найдено документов: {len(st.session_state.relevant_docs)-1}")
@@ -117,7 +102,7 @@ elif st.session_state.step == 2:
                 "Выберите документ", st.session_state.relevant_docs, index=None
             )
         st.session_state.selected_doc = selected_doc
-        # st.rerun()
+
         if st.session_state.selected_doc is not None:
             a = "Вы выбрали: " + st.session_state.selected_doc
             st.session_state.messages.append(
@@ -130,6 +115,7 @@ elif st.session_state.step == 2:
         st.session_state.conversation_status = "base"
         st.session_state.step = 3
         st.rerun()
+
     if st.session_state.conversation_status == "doc_selected":
         if st.session_state.selected_doc == "Нет моего документа":
             st.session_state.conversation_status = "add_document"
@@ -143,6 +129,7 @@ elif st.session_state.step == 2:
                     create_schema(st.session_state.selected_doc)
             st.session_state.step = 3
             st.rerun()
+
         if m.button("Выбрать другой"):
             st.session_state.conversation_status = "base"
             choose_new_doc = "Ввведите название документа, который вы хотите заполнить"
@@ -185,13 +172,6 @@ elif st.session_state.step == 2:
                 st.session_state.messages.append(
                     {"role": "assistant", "content": AIMessage(content=q)}
                 )
-
-            # selected_doc = relevant_docs[0]
-            # st.session_state.selected_doc = relevant_docs[0]
-            # if not check_schema_existance(selected_doc):  # TODO:
-            #     create_schema(selected_doc)
-            # st.session_state.step = 3
-            # st.rerun()
 
     if st.sidebar.button("Вернуться к описанию"):
         st.session_state.step = 1
@@ -244,6 +224,15 @@ elif st.session_state.step == 3:
             st.session_state.conversation_status = "doc_filled"
             st.session_state.step = 2
             st.rerun()
+    
+    if st.sidebar.button("Вернуться к описанию"):
+        st.session_state.selected_doc = None
+        st.session_state.step = 1
+        st.rerun()
+    if st.sidebar.button("Вернуться в чат"):
+        st.session_state.selected_doc = None
+        st.session_state.step = 2
+        st.rerun()
 
 
 elif st.session_state.step == 4:

@@ -9,6 +9,11 @@ doc_path = os.getenv("DOCUMENTS_PATH")
 
 
 def description():
+    st.markdown("Мой телеграм: [@winst_y](https://t.me/winst_y)")
+    st.markdown(
+        "Репозиторий с кодом проекта: [Git](https://github.com/WinsttonC/LLM-docs-filling)"
+    )
+
     img_path = f"{doc_path}/images"
 
     st.markdown("""
