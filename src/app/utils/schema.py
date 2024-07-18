@@ -18,6 +18,20 @@ doc_path = os.getenv("DOCUMENTS_PATH")
 
 
 def check_doc_existance(doc_name):
+    '''
+    Проверяет, если документ с таким названием в
+    хранилище с размеченными документами.
+
+    Parameters
+    ----------
+    doc_name : str
+        Название документа.
+    Returns
+    ---------
+    True/False
+    '''
+
+    
     file_path = f"{doc_path}/documents/{doc_name}.docx"
     if os.path.exists(file_path):
         return True
@@ -26,6 +40,18 @@ def check_doc_existance(doc_name):
 
 
 def check_schema_existance(doc_name):
+    '''
+    Проверяет, если схема для документа с таким названием в
+    хранилище.
+
+    Parameters
+    ----------
+    doc_name : str
+        Название документа.
+    Returns
+    ---------
+    True/False
+    '''
     file_path = f"{doc_path}/doc_schemas/{doc_name}.json"
     if os.path.exists(file_path):
         return True
@@ -34,6 +60,29 @@ def check_schema_existance(doc_name):
 
 
 def extract_entities_with_context(text, n=13):
+    '''
+    Проверяет, если документ с таким названием в
+    хранилище с размеченными документами.
+
+    Parameters
+    ----------
+    text : str
+        Часть документа в виде строки.
+    n : int
+        Количество слов до и после пропуска, которые
+        будут добавлены в его контекст.
+    
+    Returns
+    ---------
+    entities_with_context : dict
+        Словарь пропусков из документа с контекстом, в котором
+        они находятся. 
+    
+    Example
+    ---------
+    {'ФИО заявителя': {'context': 'Контекст из документа'}}
+    '''
+
     pattern = r"\[\[(.*?)\]\]"
     matches = re.finditer(pattern, text)
     words = text.split()
@@ -64,9 +113,30 @@ def extract_entities_with_context(text, n=13):
 
 
 def create_schema(doc_name: str, new_doc=False):
-    file_path = f"{doc_path}/documents/{doc_name}.docx"
+    '''
+    Создает схему для документа с названием doc_name.
+        1. Извлекает описание пропусков из документа
+        2. Для каждого пропуска генерирует уточняющий вопрос
+        3. Генерирует характеристику документа, испольльзуя текст (с разбивкой на блоки)
+        4. Генерирует заголовок, используя характеристику документа
+        4*. Если документ загружен пользователем, использует сгенерированный 
+        заголовок в качестве имени файла схемы при сохранении.
 
-    print(f"=== СОЗДАНИЕ ШАБЛОНА ДЛЯ ДОКУМЕНТА {doc_name} ===")
+    Parameters
+    ----------
+    doc_name : str
+        Название размеченного документа.
+    new_doc : bool
+        True - документа загружен пользователем.
+        False - документ есть в хранилище.
+        
+    Returns
+    ---------
+    None
+        Сохраняет схему документа в хранилище. 
+    '''
+
+    file_path = f"{doc_path}/documents/{doc_name}.docx"
 
     doc_with_entities = Document(file_path)
 
@@ -87,8 +157,8 @@ def create_schema(doc_name: str, new_doc=False):
     fill_dict["last_update"] = current_datetime.strftime("%Y-%m-%d")
     fill_dict["title"] = generate_doc_title(fill_dict["description"])
 
+    # Замена названия в загруженном документе на сгенерированное
     if new_doc:
-        # Замена названия в загруженном документе на сгенерированное
 
         new_doc_name = fill_dict["title"]
         new_doc_name = re.sub(r'[\\/*?:"<>|]', "", new_doc_name)
