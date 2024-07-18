@@ -1,16 +1,19 @@
 import os
+import re
 import warnings
 
 from docx import Document
 from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
-
-from prompts import generate_question_prompt, generate_doc_title_prompt, describe_part_prompt, describe_doc_prompt
+from prompts.schema_prompts import (
+    describe_doc_prompt,
+    describe_part_prompt,
+    generate_doc_title_prompt,
+    generate_question_prompt,
+)
 
 load_dotenv()
-import re
-
 
 
 warnings.filterwarnings("ignore")

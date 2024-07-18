@@ -1,20 +1,16 @@
 import os
 import re
-import warnings
-
-from docx import Document
-from dotenv import load_dotenv
-
 
 from agents.find_fields_agent import find_fields
-
-
+from docx import Document
+from dotenv import load_dotenv
 
 load_dotenv()
 
 
 doc_path = os.getenv("DOCUMENTS_PATH")
 BATCH_SIZE = 2
+
 
 def is_valid_string(input_string):
     pattern = r"^[_. ]+$"
@@ -34,8 +30,7 @@ def shorten_blanks(input_string):
         return ""
 
 
-
-def process_doc(doc_name, new_doc=False):
+def create_fields_template(doc_name, new_doc=False):
     if new_doc:
         file_path = f"{doc_path}/raw_docs/{doc_name}.docx"
     else:
@@ -56,7 +51,7 @@ def process_doc(doc_name, new_doc=False):
             input_text = f"Строка:\n {input_text}\nОтвет:"
 
             content = find_fields(input_text)
-            
+
             final_text.append(content)
         else:
             final_text.append(input_text)

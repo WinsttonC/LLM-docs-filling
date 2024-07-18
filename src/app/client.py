@@ -2,27 +2,23 @@ import json
 import os
 
 import streamlit as st
-from dotenv import load_dotenv
-from config import description
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
-
-from fill_fields_LLM import fill_fields_LLM
-from agents.input_processing_agents import (
+from utils.agents.input_processing_agents import (
     approve_user_question,
     clarify_question,
     extract_doc,
     find_documents,
 )
-from schema import create_schema
-from utils import check_schema_existance
+from config import description
+from dotenv import load_dotenv
+from fill_fields_LLM import fill_fields_LLM
+from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from schema import check_doc_existance, check_schema_existance, create_schema
+from utils.process_fields import create_fields_template
 
 load_dotenv()
 
 APP_URL = os.getenv("APP_URL")
 doc_path = os.getenv("DOCUMENTS_PATH")
-
-
-
 
 
 # ===============================================================
@@ -64,8 +60,10 @@ def fill_docs():
 
 if st.session_state.step == 1:
     st.title("Заполнение документов с GigaChat")
-    st.markdown('Мой телеграм: [@winst_y](https://t.me/winst_y)')
-    st.markdown('Репозиторий с кодом проекта: [Git](https://github.com/WinsttonC/LLM-docs-filling)')
+    st.markdown("Мой телеграм: [@winst_y](https://t.me/winst_y)")
+    st.markdown(
+        "Репозиторий с кодом проекта: [Git](https://github.com/WinsttonC/LLM-docs-filling)"
+    )
 
     if st.button("Заполнить свой документ"):
         st.session_state.step = 2
@@ -137,7 +135,6 @@ elif st.session_state.step == 2:
             st.session_state.conversation_status = "add_document"
             st.rerun()
 
-        print("================")
         m = st.chat_message("assistant")
         if m.button("Заполнить документ"):
             st.session_state.conversation_status = "base"
@@ -155,7 +152,6 @@ elif st.session_state.step == 2:
             # st.rerun()
 
     if prompt := st.chat_input("Что нужно сделать"):
-        print(f"=== ПРОМПТ ===\n{prompt}")
         st.session_state.messages.append(
             {"role": "user", "content": HumanMessage(content=prompt)}
         )
@@ -185,8 +181,6 @@ elif st.session_state.step == 2:
                     q = clarify_question(prompt)
                     st.session_state.previous_prompt = prompt
                     st.session_state.conversation_status = "clarify_question"
-                    print("q")
-                    print(q)
                     st.write(q)
                 st.session_state.messages.append(
                     {"role": "assistant", "content": AIMessage(content=q)}
@@ -268,7 +262,7 @@ elif st.session_state.step == 4:
             f.write(uploaded_file.getbuffer())
         with st.spinner("Ищем пропущенные значения в документе..."):
             if not check_doc_existance(doc_name):
-                process_doc(doc_name, new_doc=True)
+                create_fields_template(doc_name, new_doc=True)
         with st.spinner("Создаем шаблон..."):
             create_schema(doc_name, new_doc=True)
         st.success("Документ сохранен в базу данных.")

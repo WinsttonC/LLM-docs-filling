@@ -3,19 +3,35 @@ import os
 import re
 from datetime import datetime
 
-from docx import Document
-from dotenv import load_dotenv
-
-from input_processing import add_documents_to_vectorstore
 from agents.schema_processing_agents import (
     generate_doc_description,
     generate_doc_title,
     generate_questions,
 )
+from docx import Document
+from dotenv import load_dotenv
+from input_processing import add_documents_to_vectorstore
 
 load_dotenv()
 
 doc_path = os.getenv("DOCUMENTS_PATH")
+
+
+def check_doc_existance(doc_name):
+    file_path = f"{doc_path}/documents/{doc_name}.docx"
+    if os.path.exists(file_path):
+        return True
+    else:
+        return False
+
+
+def check_schema_existance(doc_name):
+    file_path = f"{doc_path}/doc_schemas/{doc_name}.json"
+    # file_path = f'doc_schemas/{doc_name}'
+    if os.path.exists(file_path):
+        return True
+    else:
+        return False
 
 
 def extract_entities_with_context(text, n=13):

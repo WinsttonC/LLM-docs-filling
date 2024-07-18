@@ -1,6 +1,12 @@
+import hashlib
+import os
+
 import chromadb
 from chromadb.api.types import EmbeddingFunction, QueryResult
 from chromadb.utils import embedding_functions
+from dotenv import load_dotenv
+
+load_dotenv()
 
 embedding_name = "text-embedding-3-large"
 collection_name = "embedding_name"
@@ -15,6 +21,13 @@ embedding_model = embedding_functions.OpenAIEmbeddingFunction(
     api_base=api_base,
 )
 
+
+def hash_filename(filename):
+    hash_object = hashlib.sha256()
+    hash_object.update(filename.encode("utf-8"))
+    hash_hex = hash_object.hexdigest()
+
+    return hash_hex
 
 
 class Chroma:
@@ -48,7 +61,7 @@ class Chroma:
         docs = data_dict["docs"]
         # sources = data_dict["sources"]
         # questions = data_dict["questions"]
-        ids = data_dict["ids"]
+        ids = [hash_filename(doc) for doc in docs]
         # metadatas = [
         #     {"source": sources[i], "question": questions[i]} for i in range(len(docs))
         # ]
@@ -91,6 +104,7 @@ class Chroma:
                 include=["metadatas", "documents", "distances"],
                 n_results=1,
             )
+
 
 def find_documents(question):
     client = Chroma(f"{doc_path}/vect_docs", embedding_model, collection_name)

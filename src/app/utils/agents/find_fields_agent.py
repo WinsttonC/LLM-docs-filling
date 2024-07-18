@@ -1,7 +1,11 @@
-from prompts import extraction_prompt
+import os
+import warnings
+
+from dotenv import load_dotenv
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
-from dotenv import load_dotenv
+from prompts.field_prompts import extraction_prompt
+
 load_dotenv()
 warnings.filterwarnings("ignore")
 
@@ -12,7 +16,11 @@ chat = GigaChat(
     credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False
 )  # model='GigaChat-Pro'
 
+
 def find_fields(prompt):
     messages = [SystemMessage(content=extraction_prompt)]
-    messages.append(HumanMessage(content=input_text))
+    messages.append(HumanMessage(content=prompt))
     res = chat(messages)
+    answer = res.content
+
+    return answer

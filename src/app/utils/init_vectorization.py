@@ -1,16 +1,8 @@
 import os
 
+from chroma import Chroma
 from chromadb.utils import embedding_functions
 from dotenv import load_dotenv
-
-from chroma import Chroma
-
-def hash_filename(filename):
-    hash_object = hashlib.sha256()
-    hash_object.update(filename.encode("utf-8"))
-    hash_hex = hash_object.hexdigest()
-
-    return hash_hex
 
 load_dotenv()
 
@@ -37,7 +29,6 @@ document_titles = [os.path.splitext(file)[0] for file in files]
 
 data_dict = {
     "docs": document_titles,
-    "ids": [hash_filename(f) for f in document_titles],
 }
 
 client.add_docs(data_dict)

@@ -7,6 +7,7 @@ load_dotenv()
 
 doc_path = os.getenv("DOCUMENTS_PATH")
 
+
 def description():
     img_path = f"{doc_path}/images"
 
@@ -36,7 +37,7 @@ def description():
 
     **Результат:** документ в исходном формате размеченными полями пропусков.
     """)
-    st.image(f'{img_path}/Разметка пропусков.jpg')
+    st.image(f"{img_path}/Разметка пропусков.jpg")
 
     st.markdown("""
     ##### 2. Создание шаблона документа
@@ -50,7 +51,7 @@ def description():
     - Дата последнего обновления
 
     """)
-    st.image(f'{img_path}/Создание шаблона с метаданными.jpg')
+    st.image(f"{img_path}/Создание шаблона с метаданными.jpg")
 
     st.markdown("""
     ##### 3. Заполнение документов данными пользователя
@@ -58,12 +59,12 @@ def description():
     **Результат:** заполненный данными пользователя документ в 
     исходном формате, готовый к подписи.
     """)
-    st.image(f'{img_path}/Заполнение документа.jpg')
+    st.image(f"{img_path}/Заполнение документа.jpg")
 
     st.markdown("### Общая архитектура системы")
-    st.image(f'{img_path}/Общая архитектура.jpg')
+    st.image(f"{img_path}/Общая архитектура.jpg")
     st.markdown("### Список агентов")
-    
+
     st.markdown("""
     ### TO DO
     В этом блоке описаны потенциальные улучшения проекта, которые 

@@ -2,14 +2,10 @@ import os
 import re
 import warnings
 
+from agents.filling_fields_agent import fill_fields
 from docx import Document
 from dotenv import load_dotenv
-from langchain.schema import HumanMessage, SystemMessage
 from langchain_community.chat_models.gigachat import GigaChat
-
-from agents.filling_fields_agent import fill_fields
-
-
 
 load_dotenv()
 
@@ -21,6 +17,7 @@ chat = GigaChat(
     credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False
 )  # model='GigaChat-Pro'
 doc_path = os.getenv("DOCUMENTS_PATH")
+
 
 def replace_substrings(input_string, fields_dict):
     # Паттерн для поиска подстрок вида [[...]]
@@ -37,6 +34,7 @@ def replace_substrings(input_string, fields_dict):
 
     return result_string
 
+
 def fill_fields_rules(doc_name: str, fields_dict: dict):
     path_to_docx = f"{doc_path}/documents/{doc_name}.docx"
 
@@ -51,8 +49,6 @@ def fill_fields_rules(doc_name: str, fields_dict: dict):
         final_document.add_paragraph(text_block)
 
     final_document.save(f"{doc_path}/user_docs/{doc_name}.docx")
-
-
 
 
 def fill_fields_LLM(doc_name: str, fields_dict: dict):
