@@ -1,5 +1,5 @@
 # данные с файлами
-data
+data/vect_docs
 
 # окружение
 .env
