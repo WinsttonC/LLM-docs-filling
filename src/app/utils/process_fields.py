@@ -13,16 +13,40 @@ BATCH_SIZE = 1
 
 
 def is_valid_string(input_string):
+    '''
+    Функция для проверки, является ли строка пропуском(__).
+
+    Parameters
+    ----------
+    input_string : str
+
+    Returns
+    ---------
+    True/False
+    '''
+
     pattern = r"^[_. ]+$"
     return not bool(re.match(pattern, input_string))
 
 
 def shorten_blanks(input_string):
-    # Паттерн для поиска длинных пропусков
+    '''
+    Заменяет длинные пропуски(__) в документе на пропуски
+    фиксированной длины, чтобы упростить поиск в дальнейшем 
+    и избавиться от строк, состоящий только из __.
+
+    Parameters
+    ----------
+    input_string : str
+        Любая строка из документа.
+    Returns
+    ---------
+    output_string : str
+        Обновленная строка с пропусками или пустая строка.
+    '''
 
     if is_valid_string(input_string):
         pattern = r"(_{2,})"
-        # Заменяем длинные пропуски на сокращенный вариант
         output_string = re.sub(pattern, "____________", input_string)
 
         return output_string
@@ -31,6 +55,27 @@ def shorten_blanks(input_string):
 
 
 def create_fields_template(doc_name, new_doc=False):
+    '''
+    Ищет пропуски в неразмеченном документе и заменяет их на шаблон 
+    с описанием, например [[ФИО истца]].
+        1. Разбивает текст на блоки по абзацам
+        2. Каждый абзац с пропуском передается в LLM
+        3. Блоки собираются в новый .docx документ
+
+    Parameters
+    ----------
+    doc_name : str
+        Название документа.
+    new_doc: bool
+        True - документ уже есть в базе данных.
+        False - новый документ, загруженный пользователем.
+    Returns
+    ---------
+    None
+        Сохраняет документ с замененными пропусками
+        в хранилище с размеченными документами.
+    '''
+    
     if new_doc:
         file_path = f"{doc_path}/raw_docs/{doc_name}.docx"
     else:
@@ -40,22 +85,21 @@ def create_fields_template(doc_name, new_doc=False):
 
     final_text = []
     paragraphs = [shorten_blanks(p.text) for p in doc.paragraphs]
-    # pattern = r"_{2,}"
 
     length = len(paragraphs)
     for i in range(0, length, BATCH_SIZE):
         batch = paragraphs[i : min(i + BATCH_SIZE, length)]
         input_text = "\n".join(batch)
-        # match = re.search(pattern, input_text)
+        
         if '__' in input_text:
             
             input_text = f"Строка:\n {input_text}\nОтвет:"
-
             content = find_fields(input_text)
             if '__' in content:
-                input_text = f"Строка:\n {input_text}\nОтвет:"
                 content = find_fields(input_text)
+
             final_text.append(content)
+        
         else:
             final_text.append(input_text)
 
