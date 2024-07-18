@@ -15,27 +15,58 @@ BATCH_SIZE = 1
 
 chat = GigaChat(
     credentials=GIGACHAT_CLIENT_SECRET, verify_ssl_certs=False
-)  # model='GigaChat-Pro'
+) 
 doc_path = os.getenv("DOCUMENTS_PATH")
 
 
 def replace_substrings(input_string, fields_dict):
-    # Паттерн для поиска подстрок вида [[...]]
+    '''
+    Заменяет подстроки вида [[Описание пропуска]] на
+    данные из словаря с ответами пользователя.
+
+    Parameters
+    ----------
+    input_string : str
+        Строка с размеченными пропусками.
+    fields_dict: dict
+        Словарь с данными пользователя в формате:
+        {'ФИО заявителя': 'Иванов Иван Иванович'}
+    Returns
+    ---------
+    result_string : str
+        Строка, заполненная данными пользователя.
+    '''
+
     pattern = r"\[\[(.*?)\]\]"
 
     # Функция замены подстрок
     def replace_value(match):
-        key = match.group(1)  # Содержимое внутри [[...]]
-        # return fields_dict[key].get('user_answer', f'[[{key}]]') #replacement_dict[key]  # Возвращаем значение из словаря или оставляем как есть
-        return fields_dict.get(key, f"[[{key}]]")  # TODO: check (app-> fill rules)
+        key = match.group(1)
+        return fields_dict.get(key, f"[[{key}]]")
 
-    # Заменяем подстроки с помощью регулярных выражений и функции замены
     result_string = re.sub(pattern, replace_value, input_string)
 
     return result_string
 
 
 def fill_fields_rules(doc_name: str, fields_dict: dict):
+    '''
+    Заменяет все подстроки вида [[Описание пропуска]] в документе 
+    с использованием регулярных выражений. 
+
+    Parameters
+    ----------
+    doc_name : str
+        Документ с размеченными пропусками.
+    fields_dict: dict
+        Словарь с данными пользователя в формате:
+        {'ФИО заявителя': 'Иванов Иван Иванович'}
+    Returns
+    ---------
+    None
+        Сохраняет заполненный документ с хранилище с данными пользователя.
+    '''
+
     path_to_docx = f"{doc_path}/documents/{doc_name}.docx"
 
     str_document = Document(path_to_docx)
@@ -52,6 +83,29 @@ def fill_fields_rules(doc_name: str, fields_dict: dict):
 
 
 def fill_fields_LLM(doc_name: str, fields_dict: dict):
+    '''
+    Заменяет все подстроки вида [[Описание пропуска]]]
+    в документе с использованием LLM. 
+        1. Разбивает документ на блоки по абзацам
+        2. Заполняет пропуски в каждом абзаце,
+        используя данные пользователя
+        2*. Если пропуски остались, повторяет 2 шаг
+        3. Сохраняет заполненный документ в хранилище 
+        с файлами пользователя.
+
+    Parameters
+    ----------
+    doc_name : str
+        Документ с размеченными пропусками.
+    fields_dict: dict
+        Словарь с данными пользователя в формате:
+        {'ФИО заявителя': 'Иванов Иван Иванович'}
+    Returns
+    ---------
+    None
+        Сохраняет заполненный документ с хранилище с файлами пользователя.
+    '''
+
     path_to_docx = f"{doc_path}/documents/{doc_name}.docx"
 
     document = Document(path_to_docx)
